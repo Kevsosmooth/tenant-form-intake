@@ -1285,84 +1285,115 @@ function setCheckbox(name, value) {
   if (c) { c.checked = true; c.dispatchEvent(new Event('change', {bubbles:true})); }
 }
 
+function drawTestSignature(id) {
+  if (!sigPads[id]) return;
+  var canvas = document.getElementById(id);
+  var ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(15, 50);
+  ctx.bezierCurveTo(30, 15, 60, 15, 80, 40);
+  ctx.bezierCurveTo(100, 65, 120, 20, 150, 35);
+  ctx.bezierCurveTo(170, 45, 190, 25, 220, 40);
+  ctx.stroke();
+  sigPads[id].empty = false;
+}
+
 function fillStep0() {
   var f = document.getElementById('rentalApp');
-  f.firstName.value = 'John';
-  f.lastName.value = 'Doe';
-  f.cellPhone.value = '(555) 123-4567';
-  f.email.value = 'johndoe@test.com';
-  f.applyingAddress.value = '123 Main Street';
-  f.applyingUnit.value = '4B';
-  f.currentStreet.value = '456 Oak Avenue';
-  f.currentApt.value = '2A';
-  f.currentCity.value = 'Brooklyn';
+  f.firstName.value = 'Tamika';
+  f.lastName.value = 'Richardson';
+  f.cellPhone.value = '(718) 555-8294';
+  f.email.value = 'tamika.richardson87@gmail.com';
+  f.applyingAddress.value = '1482 Fulton Street';
+  f.applyingUnit.value = '3R';
+  f.currentStreet.value = 'HELP Meyer House';
+  f.currentApt.value = 'Room 412';
+  f.currentCity.value = 'Bronx';
   f.currentState.value = 'NY';
-  f.currentZip.value = '11201';
+  f.currentZip.value = '10456';
 }
 
 function fillStep1() {
   setRadio('viewedApt', 'Yes');
+  // Rental assistance - Yes with multiple programs
   setRadio('rentalAssist', 'Yes');
-  setCheckbox('program', 'NYCHA (Section 8)');
-  setRadio('voucherBeds', '2 BR');
-  setRadio('shelter', 'No');
-  setFileInput('residencyLetter', 'residency-letter.pdf');
+  toggle('assistPrograms', true);
+  setCheckbox('program', 'CityFHEPS/FHEPS/Share');
+  setCheckbox('program', 'HASA');
+  setRadio('voucherBeds', '3 BR');
+  // Coming from shelter - Yes with residency letter
+  setRadio('shelter', 'Yes');
+  toggle('residencyUpload', true);
+  setFileInput('residencyLetter', 'shelter-residency-letter.pdf');
+  // Cash assistance active
   setRadio('cashActive', 'Yes');
-  document.querySelector('input[name="cashNumber"]').value = '1234567890';
-  setRadio('creditScore', 'Fair (670-739)');
+  toggle('cashDetails', true);
+  document.querySelector('input[name="cashNumber"]').value = '7283910456';
+  setRadio('creditScore', 'Very Poor (300-579)');
 }
 
 function fillStep2() {
-  setRadio('hasOccupants', 'No');
+  // Has occupants - 2 children
+  setRadio('hasOccupants', 'Yes');
+  toggle('occupantDetails', true);
+  document.getElementById('occupantCount').value = '2';
+  renderOccupants();
+  setTimeout(function() {
+    var f = document.getElementById('rentalApp');
+    if (f.elements['occName0']) { f.elements['occName0'].value = 'Jaylen Richardson'; f.elements['occRelation0'].value = 'Son'; }
+    if (f.elements['occName1']) { f.elements['occName1'].value = 'Aaliyah Richardson'; f.elements['occRelation1'].value = 'Daughter'; }
+  }, 100);
+  // Employed - part time
   setRadio('employed', 'Yes');
+  toggle('employmentInfo', true);
   var f = document.getElementById('rentalApp');
-  f.employerName.value = 'Test Company Inc';
-  f.employerAddress.value = '789 Business Blvd, New York, NY';
-  f.supervisorName.value = 'Jane Smith';
-  f.supervisorPhone.value = '(555) 987-6543';
-  f.hourlyRate.value = '25.00';
-  f.hoursPerWeek.value = '40';
+  f.employerName.value = 'Target Corp';
+  f.employerAddress.value = '139 Flatbush Ave, Brooklyn, NY 11217';
+  f.supervisorName.value = 'Marcus Thompson';
+  f.supervisorPhone.value = '(718) 555-3201';
+  f.hourlyRate.value = '17.50';
+  f.hoursPerWeek.value = '28';
   setRadio('veteran', 'No');
 }
 
 function fillStep3() {
-  setFileInput('paystub1', 'paystub-1.pdf');
-  setFileInput('paystub2', 'paystub-2.pdf');
-  setFileInput('paystub3', 'paystub-3.pdf');
+  setFileInput('paystub1', 'paystub-03-15-2026.pdf');
+  setFileInput('paystub2', 'paystub-03-01-2026.pdf');
+  setFileInput('paystub3', 'paystub-02-15-2026.pdf');
+  // Filed taxes - yes
   setRadio('filedTax', 'Yes');
-  setFileInput('taxReturn', 'tax-return.pdf');
-  setCheckbox('incomeSource', 'N/A');
+  toggle('taxUpload', true);
+  setFileInput('taxReturn', 'tax-return-2025.pdf');
+  // Multiple income sources
+  setCheckbox('incomeSource', 'Cash Assistance');
+  setCheckbox('incomeSource', 'Food Stamps');
+  setFileInput('budgetLetter', 'hra-budget-letter.pdf');
 }
 
 function fillStep4() {
   var f = document.getElementById('rentalApp');
-  f.hsName.value = 'Bob Johnson';
-  f.hsPhone.value = '(555) 111-2222';
-  f.hsEmail.value = 'bob@test.com';
-  f.llName.value = 'Mary Williams';
-  f.llPhone.value = '(555) 333-4444';
-  f.llEmail.value = 'mary@test.com';
+  // Housing specialist from shelter
+  f.hsName.value = 'Denise Watkins';
+  f.hsPhone.value = '(212) 555-7743';
+  f.hsEmail.value = 'dwatkins@helpshelters.org';
+  // Previous landlord is shelter
+  f.llName.value = 'SHELTER';
+  f.llPhone.value = 'SHELTER';
+  f.llEmail.value = 'SHELTER';
   setRadio('smoker', 'No');
-  setRadio('pets', 'No');
-  setFileInput('photoId', 'photo-id.pdf');
-  setFileInput('ssnCard', 'ssn-card.pdf');
-  setFileInput('voucher', 'voucher.pdf');
-  f.sigFirstName.value = 'John';
-  f.sigLastName.value = 'Doe';
-  // Draw a test line on each signature pad
-  ['sig1','sig2','sig3'].forEach(id => {
-    if (sigPads[id]) {
-      var canvas = document.getElementById(id);
-      var ctx = canvas.getContext('2d');
-      ctx.beginPath();
-      ctx.moveTo(20, 40);
-      ctx.bezierCurveTo(50, 10, 100, 60, 150, 30);
-      ctx.strokeStyle = '#1a1a1a';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      sigPads[id].empty = false;
-    }
-  });
+  setRadio('pets', 'Yes');
+  // All required documents
+  setFileInput('photoId', 'ny-state-id.pdf');
+  setFileInput('ssnCard', 'social-security-card.pdf');
+  setFileInput('voucher', 'cityfheps-voucher-full.pdf');
+  // Signatures
+  f.sigFirstName.value = 'Tamika';
+  f.sigLastName.value = 'Richardson';
+  drawTestSignature('sig1');
+  drawTestSignature('sig2');
+  drawTestSignature('sig3');
 }
 
 var fillFunctions = [fillStep0, fillStep1, fillStep2, fillStep3, fillStep4];

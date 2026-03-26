@@ -99,17 +99,17 @@
   }
   .progress-seg {
     flex: 1;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--border);
+    height: 6px;
+    border-radius: 3px;
+    background: #ccc8be;
     transition: background 0.4s ease, box-shadow 0.4s ease;
     cursor: pointer;
-    padding: 8px 0;
+    padding: 6px 0;
     background-clip: content-box;
   }
   .progress-seg.completed { background: var(--gold); background-clip: content-box; }
   .progress-seg.active {
-    background: linear-gradient(90deg, var(--gold) 60%, var(--border) 100%);
+    background: var(--gold);
     box-shadow: 0 0 8px rgba(201, 168, 76, 0.3);
     background-clip: content-box;
   }

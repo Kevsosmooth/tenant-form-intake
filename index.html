@@ -1217,19 +1217,18 @@ async function submitForm() {
     }
   }
 
-  // Send to Apps Script
+  // Send to Apps Script via no-cors (Google Apps Script redirects block CORS)
   var response = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
+    mode: 'no-cors',
+    redirect: 'follow',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
   });
 
-  var result = await response.json();
-  if (result.success) {
-    return true;
-  } else {
-    throw new Error(result.error || 'Submission failed');
-  }
+  // no-cors returns opaque response (status 0), so we can't read it
+  // We assume success if fetch didn't throw
+  return true;
 }
 
 // Submit

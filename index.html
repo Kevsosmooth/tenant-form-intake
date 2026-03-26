@@ -10,7 +10,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --header-bg: #1a2e1e;
+    --header-bg: #2f3d3a;
     --header-text: #f5f3ef;
     --gold: #b8943e;
     --gold-hover: #d4ac4a;
@@ -99,19 +99,16 @@
   }
   .progress-seg {
     flex: 1;
-    height: 6px;
-    border-radius: 3px;
-    background: #ccc8be;
+    height: 8px;
+    border-radius: 4px;
+    background: #d5d0c8;
     transition: background 0.4s ease, box-shadow 0.4s ease;
     cursor: pointer;
-    padding: 6px 0;
-    background-clip: content-box;
   }
-  .progress-seg.completed { background: var(--gold); background-clip: content-box; }
+  .progress-seg.completed { background: var(--gold); }
   .progress-seg.active {
     background: var(--gold);
     box-shadow: 0 0 8px rgba(201, 168, 76, 0.3);
-    background-clip: content-box;
   }
   .progress-info {
     display: flex;
@@ -1042,33 +1039,7 @@ document.querySelectorAll('input[name="incomeSource"]:not(#incNA)').forEach(cb =
   cb.addEventListener('change', function () { if (this.checked) document.getElementById('incNA').checked = false; });
 });
 
-// Blur validation
-function attachBlur() {
-  document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="number"]').forEach(input => {
-    if (input.dataset.b) return;
-    input.dataset.b = '1';
-    input.addEventListener('blur', function () {
-      const fg = this.closest('.field-group');
-      if (!fg) return;
-      fg.classList.remove('has-error');
-      const val = this.value.trim();
-      if (!val && !this.required) return;
-      if (this.required && !val) { fg.classList.add('has-error'); return; }
-      if (!val) return;
-      let err = false;
-      if (this.type === 'email' && !/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(val)) err = true;
-      if (this.type === 'tel' && val.replace(/\D/g, '').length !== 10 && val.toUpperCase() !== 'SHELTER') err = true;
-      if (this.pattern && !new RegExp('^' + this.pattern + '$').test(val)) err = true;
-      if (err) fg.classList.add('has-error');
-      else fg.classList.add('is-valid');
-    });
-    input.addEventListener('focus', function () {
-      const fg = this.closest('.field-group');
-      if (fg) { fg.classList.remove('has-error', 'is-valid'); }
-    });
-  });
-}
-attachBlur();
+// Validation only triggers on Continue/Submit click (handled in validateStep)
 
 // Signature Pads (pressure-aware with undo)
 const sigPads = {};
@@ -1286,6 +1257,128 @@ document.getElementById('rentalApp').addEventListener('submit', async function (
 
 updateProgress();
 initAllSigs();
+
+// ===== TEST AUTO-FILL (remove before production) =====
+var TEST_PDF_BASE64 = 'JVBERi0xLjAKMSAwIG9iajw8L1BhZ2VzIDIgMCBSPj5lbmRvYmogMiAwIG9iajw8L0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iaiAzIDAgb2JqPDwvTWVkaWFCb3hbMCAwIDYxMiA3OTJdPj5lbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAp0cmFpbGVyPDwvU2l6ZSA0L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMTkwCiUlRU9G';
+
+function createTestFile(name) {
+  var bytes = atob(TEST_PDF_BASE64);
+  var arr = new Uint8Array(bytes.length);
+  for (var i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  var file = new File([arr], name, { type: 'application/pdf' });
+  var dt = new DataTransfer();
+  dt.items.add(file);
+  return dt.files;
+}
+
+function setFileInput(name, fileName) {
+  var input = document.querySelector('input[name="' + name + '"]');
+  if (input) input.files = createTestFile(fileName);
+}
+
+function setRadio(name, value) {
+  var r = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+  if (r) { r.checked = true; r.dispatchEvent(new Event('change', {bubbles:true})); }
+}
+
+function setCheckbox(name, value) {
+  var c = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+  if (c) { c.checked = true; c.dispatchEvent(new Event('change', {bubbles:true})); }
+}
+
+function fillStep0() {
+  var f = document.getElementById('rentalApp');
+  f.firstName.value = 'John';
+  f.lastName.value = 'Doe';
+  f.cellPhone.value = '(555) 123-4567';
+  f.email.value = 'johndoe@test.com';
+  f.applyingAddress.value = '123 Main Street';
+  f.applyingUnit.value = '4B';
+  f.currentStreet.value = '456 Oak Avenue';
+  f.currentApt.value = '2A';
+  f.currentCity.value = 'Brooklyn';
+  f.currentState.value = 'NY';
+  f.currentZip.value = '11201';
+}
+
+function fillStep1() {
+  setRadio('viewedApt', 'Yes');
+  setRadio('rentalAssist', 'Yes');
+  setCheckbox('program', 'NYCHA (Section 8)');
+  setRadio('voucherBeds', '2 BR');
+  setRadio('shelter', 'No');
+  setFileInput('residencyLetter', 'residency-letter.pdf');
+  setRadio('cashActive', 'Yes');
+  document.querySelector('input[name="cashNumber"]').value = '1234567890';
+  setRadio('creditScore', 'Fair (670-739)');
+}
+
+function fillStep2() {
+  setRadio('hasOccupants', 'No');
+  setRadio('employed', 'Yes');
+  var f = document.getElementById('rentalApp');
+  f.employerName.value = 'Test Company Inc';
+  f.employerAddress.value = '789 Business Blvd, New York, NY';
+  f.supervisorName.value = 'Jane Smith';
+  f.supervisorPhone.value = '(555) 987-6543';
+  f.hourlyRate.value = '25.00';
+  f.hoursPerWeek.value = '40';
+  setRadio('veteran', 'No');
+}
+
+function fillStep3() {
+  setFileInput('paystub1', 'paystub-1.pdf');
+  setFileInput('paystub2', 'paystub-2.pdf');
+  setFileInput('paystub3', 'paystub-3.pdf');
+  setRadio('filedTax', 'Yes');
+  setFileInput('taxReturn', 'tax-return.pdf');
+  setCheckbox('incomeSource', 'N/A');
+}
+
+function fillStep4() {
+  var f = document.getElementById('rentalApp');
+  f.hsName.value = 'Bob Johnson';
+  f.hsPhone.value = '(555) 111-2222';
+  f.hsEmail.value = 'bob@test.com';
+  f.llName.value = 'Mary Williams';
+  f.llPhone.value = '(555) 333-4444';
+  f.llEmail.value = 'mary@test.com';
+  setRadio('smoker', 'No');
+  setRadio('pets', 'No');
+  setFileInput('photoId', 'photo-id.pdf');
+  setFileInput('ssnCard', 'ssn-card.pdf');
+  setFileInput('voucher', 'voucher.pdf');
+  f.sigFirstName.value = 'John';
+  f.sigLastName.value = 'Doe';
+  // Draw a test line on each signature pad
+  ['sig1','sig2','sig3'].forEach(id => {
+    if (sigPads[id]) {
+      var canvas = document.getElementById(id);
+      var ctx = canvas.getContext('2d');
+      ctx.beginPath();
+      ctx.moveTo(20, 40);
+      ctx.bezierCurveTo(50, 10, 100, 60, 150, 30);
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      sigPads[id].empty = false;
+    }
+  });
+}
+
+var fillFunctions = [fillStep0, fillStep1, fillStep2, fillStep3, fillStep4];
+
+// Add auto-fill button to each step
+document.querySelectorAll('.form-step[data-step]').forEach(step => {
+  var stepNum = step.getAttribute('data-step');
+  if (stepNum === 'success') return;
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = 'Auto-Fill Test Data';
+  btn.style.cssText = 'background:#c93c3c;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:0.05em;margin-bottom:16px;';
+  btn.onclick = function() { fillFunctions[parseInt(stepNum)](); };
+  step.insertBefore(btn, step.firstChild);
+});
 </script>
 </body>
 </html>

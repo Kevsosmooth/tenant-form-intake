@@ -1315,17 +1315,17 @@ function drawTestSignature(id) {
 
 function fillStep0() {
   var f = document.getElementById('rentalApp');
-  f.firstName.value = 'Tamika';
-  f.lastName.value = 'Richardson';
-  f.cellPhone.value = '(718) 555-8294';
-  f.email.value = 'tamika.richardson87@gmail.com';
-  f.applyingAddress.value = '1482 Fulton Street';
-  f.applyingUnit.value = '3R';
-  f.currentStreet.value = 'HELP Meyer House';
-  f.currentApt.value = 'Room 412';
-  f.currentCity.value = 'Bronx';
+  f.firstName.value = 'Jane';
+  f.lastName.value = 'Testcase';
+  f.cellPhone.value = '(555) 000-0000';
+  f.email.value = 'jane.testcase@fakeemail.test';
+  f.applyingAddress.value = '999 Test Boulevard';
+  f.applyingUnit.value = '0A';
+  f.currentStreet.value = 'Test Shelter Facility';
+  f.currentApt.value = 'Room 000';
+  f.currentCity.value = 'Testville';
   f.currentState.value = 'NY';
-  f.currentZip.value = '10456';
+  f.currentZip.value = '00000';
 }
 
 function fillStep1() {
@@ -1357,9 +1357,9 @@ function fillStep2() {
   setTimeout(function() {
     var names = document.querySelectorAll('input[name^="occName"]');
     var rels = document.querySelectorAll('input[name^="occRelation"]');
-    if (names[0]) names[0].value = 'Jaylen Richardson';
+    if (names[0]) names[0].value = 'Child Testcase';
     if (rels[0]) rels[0].value = 'Son';
-    if (names[1]) names[1].value = 'Aaliyah Richardson';
+    if (names[1]) names[1].value = 'Baby Testcase';
     if (rels[1]) rels[1].value = 'Daughter';
   }, 300);
   // Employed - part time
@@ -1367,10 +1367,10 @@ function fillStep2() {
   toggle('employmentInfo', true);
   setTimeout(function() {
     var f = document.getElementById('rentalApp');
-    f.employerName.value = 'Target Corp';
-    f.employerAddress.value = '139 Flatbush Ave, Brooklyn, NY 11217';
-    f.supervisorName.value = 'Marcus Thompson';
-    f.supervisorPhone.value = '(718) 555-3201';
+    f.employerName.value = 'Fake Company LLC';
+    f.employerAddress.value = '000 Nowhere Ave, Testville, NY 00000';
+    f.supervisorName.value = 'Boss Fakename';
+    f.supervisorPhone.value = '(555) 000-0001';
     f.hourlyRate.value = '17.50';
     f.hoursPerWeek.value = '28';
   }, 300);
@@ -1394,9 +1394,9 @@ function fillStep3() {
 function fillStep4() {
   var f = document.getElementById('rentalApp');
   // Housing specialist from shelter
-  f.hsName.value = 'Denise Watkins';
-  f.hsPhone.value = '(212) 555-7743';
-  f.hsEmail.value = 'dwatkins@helpshelters.org';
+  f.hsName.value = 'Tester Specialist';
+  f.hsPhone.value = '(555) 000-0002';
+  f.hsEmail.value = 'specialist@fakeshelter.test';
   // Previous landlord is shelter
   f.llName.value = 'SHELTER';
   f.llPhone.value = 'SHELTER';
@@ -1408,8 +1408,8 @@ function fillStep4() {
   setFileInput('ssnCard', 'social-security-card.pdf');
   setFileInput('voucher', 'cityfheps-voucher-full.pdf');
   // Signatures
-  f.sigFirstName.value = 'Tamika';
-  f.sigLastName.value = 'Richardson';
+  f.sigFirstName.value = 'Jane';
+  f.sigLastName.value = 'Testcase';
   drawTestSignature('sig1');
   drawTestSignature('sig2');
   drawTestSignature('sig3');

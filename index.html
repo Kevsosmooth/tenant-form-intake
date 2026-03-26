@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rental Application</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --slate-900: #0f172a;
+    --slate-800: #1e293b;
+    --slate-700: #334155;
+    --slate-600: #475569;
+    --slate-500: #64748b;
+    --slate-400: #94a3b8;
+    --slate-300: #cbd5e1;
+    --slate-200: #e2e8f0;
+    --slate-100: #f1f5f9;
+    --slate-50: #f8fafc;
+    --white: #ffffff;
+    --red-600: #dc2626;
+    --green-600: #059669;
+    --radius: 6px;
+  }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--slate-100);
+    color: var(--slate-800);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .form-header {
+    background: var(--slate-900);
+    color: var(--white);
+    padding: 32px 0 26px;
+    text-align: center;
+    border-bottom: 3px solid var(--slate-400);
+  }
+  .logo-area {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: var(--white);
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid var(--slate-400);
+    cursor: pointer;
+  }
+  .logo-area img { max-width: 80px; max-height: 80px; object-fit: contain; }
+  .logo-placeholder {
+    font-size: 10px;
+    color: var(--slate-500);
+    text-align: center;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .form-header p { font-size: 13px; color: var(--slate-400); margin-top: 4px; }
+
+  .progress-bar { background: var(--slate-200); height: 4px; position: sticky; top: 0; z-index: 100; }
+  .progress-fill { height: 100%; background: var(--slate-700); transition: width 0.4s ease; width: 0%; }
+
+  .step-indicators {
+    display: flex; justify-content: center; gap: 6px; padding: 14px 12px 10px;
+    background: var(--white); border-bottom: 1px solid var(--slate-200);
+    position: sticky; top: 4px; z-index: 99; flex-wrap: wrap;
+  }
+  .step-dot {
+    font-size: 11px; padding: 4px 14px; border-radius: 20px;
+    background: var(--slate-100); color: var(--slate-500); cursor: pointer;
+    transition: all 0.2s; white-space: nowrap; font-weight: 500; border: 1px solid var(--slate-200);
+  }
+  .step-dot.active { background: var(--slate-800); color: var(--white); border-color: var(--slate-800); }
+  .step-dot.completed { background: var(--slate-600); color: var(--white); border-color: var(--slate-600); }
+
+  .form-container { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .form-step { display: none; animation: fadeIn 0.3s ease; }
+  .form-step.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section {
+    background: var(--white); border: 1px solid var(--slate-200);
+    border-radius: var(--radius); padding: 28px; margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 15px; font-weight: 700; color: var(--slate-900);
+    margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--slate-300);
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+
+  .field-group { margin-bottom: 16px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 540px) { .field-row { grid-template-columns: 1fr; } }
+
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--slate-700); margin-bottom: 5px; }
+  label .required { color: var(--red-600); margin-left: 2px; }
+  .helper-text { font-size: 11px; color: var(--slate-400); margin-top: 4px; font-style: italic; }
+
+  input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--slate-200); border-radius: 4px;
+    font-size: 14px; font-family: inherit; color: var(--slate-800); background: var(--slate-50);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--slate-600);
+    box-shadow: 0 0 0 2px rgba(71,85,105,0.12); background: var(--white);
+  }
+  .error-msg { color: var(--red-600); font-size: 11px; margin-top: 3px; display: none; }
+  .field-group.has-error .error-msg { display: block; }
+  .field-group.has-error input, .field-group.has-error select { border-color: var(--red-600); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .option-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .option-group.vertical { flex-direction: column; }
+  .option-item { position: relative; }
+  .option-item input[type="radio"], .option-item input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .option-item label {
+    display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+    border: 1px solid var(--slate-200); border-radius: 4px; cursor: pointer;
+    font-weight: 400; font-size: 14px; transition: all 0.15s;
+    background: var(--white); min-width: 110px; color: var(--slate-700);
+  }
+  .option-item input:checked + label {
+    border-color: var(--slate-800); background: var(--slate-50);
+    color: var(--slate-900); font-weight: 600;
+  }
+  .option-item label::before {
+    content: ''; width: 16px; height: 16px; border: 2px solid var(--slate-300);
+    border-radius: 50%; flex-shrink: 0; transition: all 0.15s;
+  }
+  .option-item input[type="checkbox"] + label::before { border-radius: 3px; }
+  .option-item input:checked + label::before {
+    border-color: var(--slate-800); background: var(--slate-800);
+    box-shadow: inset 0 0 0 2.5px var(--white);
+  }
+
+  .file-upload {
+    border: 2px dashed var(--slate-300); border-radius: 4px; padding: 18px;
+    text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    position: relative; background: var(--slate-50);
+  }
+  .file-upload:hover { border-color: var(--slate-600); background: var(--white); }
+  .file-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .file-upload .upload-icon { font-size: 24px; color: var(--slate-400); margin-bottom: 4px; }
+  .file-upload .upload-text { font-size: 12px; color: var(--slate-500); }
+  .file-upload .file-name { font-size: 12px; color: var(--green-600); font-weight: 600; margin-top: 6px; }
+
+  .signature-pad-wrapper {
+    border: 1px solid var(--slate-200); border-radius: 4px;
+    overflow: hidden; position: relative; background: var(--white);
+    touch-action: none;
+  }
+  .signature-pad-wrapper canvas { display: block; width: 100%; height: 150px; background: var(--white); }
+  .sig-clear {
+    position: absolute; top: 6px; right: 6px; font-size: 11px;
+    background: var(--slate-800); color: var(--white); border: none;
+    padding: 3px 10px; border-radius: 3px; cursor: pointer;
+  }
+  .sig-label { display: flex; justify-content: space-between; align-items: center; }
+  .sig-hint { font-size: 11px; color: var(--slate-400); font-weight: 400; }
+
+  .form-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; }
+  .btn {
+    padding: 12px 32px; border: none; border-radius: 4px; font-size: 13px;
+    font-weight: 700; cursor: pointer; transition: background 0.15s, transform 0.1s;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--slate-800); color: var(--white); }
+  .btn-primary:hover { background: var(--slate-700); }
+  .btn-secondary { background: var(--slate-200); color: var(--slate-700); }
+  .btn-secondary:hover { background: var(--slate-300); }
+  .btn-submit { background: var(--slate-900); color: var(--white); font-size: 14px; padding: 14px 48px; }
+  .btn-submit:hover { background: var(--slate-700); }
+
+  .conditional { display: none; }
+  .conditional.show { display: block; }
+
+  .occupant-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    padding: 10px 0; border-bottom: 1px solid var(--slate-100);
+  }
+
+  .disclosure-text {
+    font-size: 12px; color: var(--slate-500); line-height: 1.7;
+    padding: 16px 20px; background: var(--slate-50); border-radius: 4px;
+    border: 1px solid var(--slate-200); margin-bottom: 14px;
+  }
+
+  .success-screen { text-align: center; padding: 60px 20px; }
+  .success-screen .check {
+    width: 60px; height: 60px; border-radius: 50%; background: var(--green-600);
+    color: var(--white); font-size: 28px; display: inline-flex;
+    align-items: center; justify-content: center; margin-bottom: 16px;
+  }
+
+  .hidden { display: none !important; }
+  .form-footer { text-align: center; padding: 20px; font-size: 11px; color: var(--slate-400); }
+</style>
+</head>
+<body>
+
+<div class="form-header">
+  <div class="logo-area" onclick="document.getElementById('logoUpload').click()">
+    <div class="logo-placeholder" id="logoPlaceholder">Your<br>Logo<br>Here</div>
+    <input type="file" id="logoUpload" accept="image/*" style="display:none">
+  </div>
+  <h1>Rental Application</h1>
+  <p>Complete all required fields to submit your application</p>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="step-indicators" id="stepIndicators">
+  <span class="step-dot active" data-step="0">Contact</span>
+  <span class="step-dot" data-step="1">Screening</span>
+  <span class="step-dot" data-step="2">Occupants & Work</span>
+  <span class="step-dot" data-step="3">Documents</span>
+  <span class="step-dot" data-step="4">Authorization</span>
+</div>
+
+<div class="form-container">
+<form id="rentalApp" action="https://formspree.io/f/xojpqlvb" method="POST" enctype="multipart/form-data" novalidate>
+
+<!-- PAGE 1: CONTACT -->
+<div class="form-step active" data-step="0">
+  <div class="section">
+    <div class="section-title">Application Code</div>
+    <div class="field-group">
+      <label for="appCode">Enter the application code if you were provided one</label>
+      <input type="text" id="appCode" name="appCode" placeholder="Optional">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Contact Information</div>
+    <div class="field-row field-group">
+      <div class="field-group">
+        <label for="firstName">First Name <span class="required">*</span></label>
+        <input type="text" id="firstName" name="firstName" required pattern="[A-Za-z\s\-']+">
+        <div class="error-msg">Letters only</div>
+      </div>
+      <div class="field-group">
+        <label for="lastName">Last Name <span class="required">*</span></label>
+        <input type="text" id="lastName" name="lastName" required pattern="[A-Za-z\s\-']+">
+        <div class="error-msg">Letters only</div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label for="cellPhone">Cell Phone <span class="required">*</span></label>
+      <input type="tel" id="cellPhone" name="cellPhone" required placeholder="(000) 000-0000">
+      <div class="error-msg">Enter a valid phone number</div>
+    </div>
+    <div class="field-group">
+      <label for="email">Email <span class="required">*</span></label>
+      <input type="email" id="email" name="email" required>
+      <div class="error-msg">Enter a valid email</div>
+    </div>
+    <div class="field-group">
+      <label for="applyingAddress">Address You Are Applying To <span class="required">*</span></label>
+      <input type="text" id="applyingAddress" name="applyingAddress" required>
+      <div class="error-msg">Required</div>
+    </div>
+    <div class="field-group">
+      <label for="applyingUnit">Unit Number <span class="required">*</span></label>
+      <input type="text" id="applyingUnit" name="applyingUnit" required>
+      <div class="error-msg">Required</div>
+    </div>
+    <div class="field-group">
+      <label>Current Address <span class="required">*</span></label>
+      <input type="text" name="currentStreet" required placeholder="Street Address" style="margin-bottom:8px">
+      <input type="text" name="currentApt" placeholder="Apt / Suite / Unit" style="margin-bottom:8px">
+      <div class="field-row">
+        <input type="text" name="currentCity" required placeholder="City">
+        <select name="currentState" required>
+          <option value="">State</option>
+          <option value="NY">New York</option><option value="NJ">New Jersey</option>
+          <option value="CT">Connecticut</option><option value="PA">Pennsylvania</option>
+          <option value="CA">California</option><option value="FL">Florida</option>
+          <option value="TX">Texas</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field-row" style="margin-top:8px">
+        <input type="text" name="currentZip" required placeholder="ZIP Code" pattern="\d{5}(-\d{4})?">
+        <select name="currentCountry"><option value="US" selected>United States</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="form-nav"><span></span><button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button></div>
+</div>
+
+<!-- PAGE 2: SCREENING -->
+<div class="form-step" data-step="1">
+  <div class="section">
+    <div class="section-title">Initial Questions</div>
+
+    <div class="field-group">
+      <label>Did you view the apartment? <span class="required">*</span></label>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="viewedApt" id="viewedYes" value="Yes" required><label for="viewedYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="viewedApt" id="viewedNo" value="No"><label for="viewedNo">No</label></div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Do you have a rental assistance program? <span class="required">*</span></label>
+      <div class="helper-text" style="margin-bottom:6px">Sec 8, City FHEPS, HASA, etc</div>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="rentalAssist" id="assistYes" value="Yes" required onchange="toggle('assistPrograms',true)"><label for="assistYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="rentalAssist" id="assistNo" value="No" onchange="toggle('assistPrograms',false)"><label for="assistNo">No</label></div>
+      </div>
+    </div>
+
+    <div class="conditional" id="assistPrograms">
+      <div class="field-group">
+        <label>Which program do you have? <span class="required">*</span></label>
+        <div class="option-group vertical">
+          <div class="option-item"><input type="checkbox" name="program" id="progNYCHA" value="NYCHA (Section 8)"><label for="progNYCHA">NYCHA (Section 8)</label></div>
+          <div class="option-item"><input type="checkbox" name="program" id="progHPD" value="HPD (Section 8)"><label for="progHPD">HPD (Section 8)</label></div>
+          <div class="option-item"><input type="checkbox" name="program" id="progHCV" value="HCV (Section 8)"><label for="progHCV">HCV (Section 8)</label></div>
+          <div class="option-item"><input type="checkbox" name="program" id="progCVR" value="CVR (Section 8)"><label for="progCVR">CVR (Section 8)</label></div>
+          <div class="option-item"><input type="checkbox" name="program" id="progHASA" value="HASA"><label for="progHASA">HASA</label></div>
+          <div class="option-item"><input type="checkbox" name="program" id="progFHEPS" value="CityFHEPS/FHEPS/Share"><label for="progFHEPS">CityFHEPS / FHEPS / Share Program</label></div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>How many bedrooms is your voucher for? <span class="required">*</span></label>
+        <div class="option-group">
+          <div class="option-item"><input type="radio" name="voucherBeds" id="bedS" value="Studio"><label for="bedS">Studio</label></div>
+          <div class="option-item"><input type="radio" name="voucherBeds" id="bed1" value="1 BR"><label for="bed1">1 BR</label></div>
+          <div class="option-item"><input type="radio" name="voucherBeds" id="bed2" value="2 BR"><label for="bed2">2 BR</label></div>
+          <div class="option-item"><input type="radio" name="voucherBeds" id="bed3" value="3 BR"><label for="bed3">3 BR</label></div>
+          <div class="option-item"><input type="radio" name="voucherBeds" id="bed4" value="4 BR"><label for="bed4">4 BR</label></div>
+          <div class="option-item"><input type="radio" name="voucherBeds" id="bed5" value="5 BR"><label for="bed5">5 BR</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Are you coming from a shelter? <span class="required">*</span></label>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="shelter" id="shelterYes" value="Yes" required onchange="toggle('residencyUpload',true)"><label for="shelterYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="shelter" id="shelterNo" value="No" onchange="toggle('residencyUpload',false)"><label for="shelterNo">No</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="residencyUpload">
+      <div class="field-group">
+        <label>Letter of Residency <span class="required">*</span></label>
+        <div class="file-upload"><input type="file" name="residencyLetter" accept=".pdf,.jpg,.jpeg,.png"><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Is your cash assistance case active? <span class="required">*</span></label>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="cashActive" id="cashYes" value="Yes" required onchange="toggle('cashDetails',true)"><label for="cashYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="cashActive" id="cashNo" value="No" onchange="toggle('cashDetails',false)"><label for="cashNo">No</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="cashDetails">
+      <div class="field-group">
+        <label for="cashNumber">Cash Assistance Number <span class="required">*</span></label>
+        <input type="text" id="cashNumber" name="cashNumber" maxlength="10" pattern="\d{10}" placeholder="10-digit number">
+        <div class="helper-text">Found in your ACCESSHRA app or HRA budget letter</div>
+        <div class="error-msg">Must be exactly 10 digits</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Where would you say your credit score would rank? <span class="required">*</span></label>
+      <div class="option-group vertical">
+        <div class="option-item"><input type="radio" name="creditScore" id="creditNone" value="No Credit History" required><label for="creditNone">No Credit History</label></div>
+        <div class="option-item"><input type="radio" name="creditScore" id="creditVP" value="Very Poor (300-579)"><label for="creditVP">Very Poor (300-579)</label></div>
+        <div class="option-item"><input type="radio" name="creditScore" id="creditP" value="Poor (580-669)"><label for="creditP">Poor (580-669)</label></div>
+        <div class="option-item"><input type="radio" name="creditScore" id="creditF" value="Fair (670-739)"><label for="creditF">Fair (670-739)</label></div>
+        <div class="option-item"><input type="radio" name="creditScore" id="creditG" value="Good (740-799)"><label for="creditG">Good (740-799)</label></div>
+        <div class="option-item"><input type="radio" name="creditScore" id="creditVG" value="Very Good (800+)"><label for="creditVG">Very Good (800+)</label></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+    <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
+  </div>
+</div>
+
+<!-- PAGE 3: OCCUPANTS & EMPLOYMENT -->
+<div class="form-step" data-step="2">
+  <div class="section">
+    <div class="section-title">Additional Occupants</div>
+    <div class="field-group">
+      <label>Are there any other occupants that will be living with you? <span class="required">*</span></label>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="hasOccupants" id="occYes" value="Yes" required onchange="toggle('occupantDetails',true)"><label for="occYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="hasOccupants" id="occNo" value="No" onchange="toggle('occupantDetails',false)"><label for="occNo">No</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="occupantDetails">
+      <div class="field-group">
+        <label>How many additional occupants?</label>
+        <select id="occupantCount" onchange="renderOccupants()">
+          <option value="1">1 Person</option><option value="2">2 People</option><option value="3">3 People</option>
+          <option value="4">4 People</option><option value="5">5 People</option><option value="6">6 People</option><option value="7">7+ People</option>
+        </select>
+      </div>
+      <div id="occupantRows"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Employment History</div>
+    <div class="field-group">
+      <label>Do you currently work? <span class="required">*</span></label>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="employed" id="empYes" value="Yes" required onchange="toggle('employmentInfo',true)"><label for="empYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="employed" id="empNo" value="No" onchange="toggle('employmentInfo',false)"><label for="empNo">No</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="employmentInfo">
+      <div class="field-group">
+        <label for="employerName">Employer Name <span class="required">*</span></label>
+        <input type="text" id="employerName" name="employerName">
+      </div>
+      <div class="field-group">
+        <label for="employerAddress">Employer Address <span class="required">*</span></label>
+        <input type="text" id="employerAddress" name="employerAddress">
+      </div>
+      <div class="field-row field-group">
+        <div class="field-group">
+          <label for="supervisorName">Supervisor Name <span class="required">*</span></label>
+          <input type="text" id="supervisorName" name="supervisorName" pattern="[A-Za-z\s\-']+">
+          <div class="error-msg">Letters only</div>
+        </div>
+        <div class="field-group">
+          <label for="supervisorPhone">Supervisor Phone <span class="required">*</span></label>
+          <input type="tel" id="supervisorPhone" name="supervisorPhone" placeholder="(000) 000-0000">
+        </div>
+      </div>
+      <div class="field-row field-group">
+        <div class="field-group">
+          <label for="hourlyRate">Hourly Pay Rate <span class="required">*</span></label>
+          <input type="number" id="hourlyRate" name="hourlyRate" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="field-group">
+          <label for="hoursPerWeek">Avg Hours Per Week <span class="required">*</span></label>
+          <input type="number" id="hoursPerWeek" name="hoursPerWeek" min="0" max="168" placeholder="e.g. 30">
+        </div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Are you a veteran? <span class="required">*</span></label>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="veteran" id="vetYes" value="Yes" required><label for="vetYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="veteran" id="vetNo" value="No"><label for="vetNo">No</label></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+    <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
+  </div>
+</div>
+
+<!-- PAGE 4: DOCUMENTS & INCOME -->
+<div class="form-step" data-step="3">
+  <div class="section">
+    <div class="section-title">Required Documents</div>
+    <div class="helper-text" style="margin-bottom:16px">Failure to upload required documents will result in an incomplete application.</div>
+    <div class="field-group">
+      <label>1st Most Recent Paystub <span class="required">*</span></label>
+      <div class="file-upload"><input type="file" name="paystub1" accept=".pdf,.jpg,.jpeg,.png" required><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+    </div>
+    <div class="field-group">
+      <label>2nd Most Recent Paystub <span class="required">*</span></label>
+      <div class="file-upload"><input type="file" name="paystub2" accept=".pdf,.jpg,.jpeg,.png" required><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+    </div>
+    <div class="field-group">
+      <label>3rd Most Recent Paystub <span class="required">*</span></label>
+      <div class="file-upload"><input type="file" name="paystub3" accept=".pdf,.jpg,.jpeg,.png" required><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+    </div>
+    <div class="field-group">
+      <label>Did you file a tax return last year? <span class="required">*</span></label>
+      <div class="option-group">
+        <div class="option-item"><input type="radio" name="filedTax" id="taxYes" value="Yes" required onchange="toggle('taxUpload',true)"><label for="taxYes">Yes</label></div>
+        <div class="option-item"><input type="radio" name="filedTax" id="taxNo" value="No" onchange="toggle('taxUpload',false)"><label for="taxNo">No</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="taxUpload">
+      <div class="field-group">
+        <label>Last Year's Tax Return <span class="required">*</span></label>
+        <div class="file-upload"><input type="file" name="taxReturn" accept=".pdf,.jpg,.jpeg,.png"><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Other Sources of Income</div>
+    <div class="helper-text" style="margin-bottom:14px">If you receive money from the state, specify below. Otherwise select N/A.</div>
+    <div class="field-group">
+      <label>Select all that apply <span class="required">*</span></label>
+      <div class="option-group vertical">
+        <div class="option-item"><input type="checkbox" name="incomeSource" id="incCA" value="Cash Assistance"><label for="incCA">Cash Assistance</label></div>
+        <div class="option-item"><input type="checkbox" name="incomeSource" id="incSSI" value="SSI"><label for="incSSI">SSI</label></div>
+        <div class="option-item"><input type="checkbox" name="incomeSource" id="incFood" value="Food Stamps"><label for="incFood">Food Stamps</label></div>
+        <div class="option-item"><input type="checkbox" name="incomeSource" id="incOther" value="Other"><label for="incOther">Other</label></div>
+        <div class="option-item"><input type="checkbox" name="incomeSource" id="incNA" value="N/A"><label for="incNA">N/A</label></div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Cash Assistance Budget Letter <span class="required">*</span></label>
+      <div class="file-upload"><input type="file" name="budgetLetter" accept=".pdf,.jpg,.jpeg,.png"><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+    </div>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+    <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
+  </div>
+</div>
+
+<!-- PAGE 5: CONTACTS + AUTHORIZATION -->
+<div class="form-step" data-step="4">
+  <div class="section">
+    <div class="section-title">Housing Specialist Contact</div>
+    <div class="field-group">
+      <label for="hsName">Name <span class="required">*</span></label>
+      <input type="text" id="hsName" name="hsName" required pattern="[A-Za-z\s\-']+">
+    </div>
+    <div class="field-row field-group">
+      <div class="field-group">
+        <label for="hsPhone">Phone <span class="required">*</span></label>
+        <input type="tel" id="hsPhone" name="hsPhone" required placeholder="(000) 000-0000">
+      </div>
+      <div class="field-group">
+        <label for="hsEmail">Email <span class="required">*</span></label>
+        <input type="email" id="hsEmail" name="hsEmail" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Current Landlord</div>
+    <div class="helper-text" style="margin-bottom:14px">If you are in a shelter and do not have a landlord, type SHELTER</div>
+    <div class="field-group">
+      <label for="llName">Landlord Name <span class="required">*</span></label>
+      <input type="text" id="llName" name="llName" required>
+    </div>
+    <div class="field-row field-group">
+      <div class="field-group">
+        <label for="llPhone">Phone <span class="required">*</span></label>
+        <input type="tel" id="llPhone" name="llPhone" required placeholder="(000) 000-0000">
+      </div>
+      <div class="field-group">
+        <label for="llEmail">Email <span class="required">*</span></label>
+        <input type="email" id="llEmail" name="llEmail" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Authorization & Disclosure</div>
+    <div class="field-row field-group">
+      <div class="field-group">
+        <label>Are you or any other occupant a smoker? <span class="required">*</span></label>
+        <div class="option-group">
+          <div class="option-item"><input type="radio" name="smoker" id="smokerY" value="Yes" required><label for="smokerY">Yes</label></div>
+          <div class="option-item"><input type="radio" name="smoker" id="smokerN" value="No"><label for="smokerN">No</label></div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Do you have pets? <span class="required">*</span></label>
+        <div class="option-group">
+          <div class="option-item"><input type="radio" name="pets" id="petsY" value="Yes" required><label for="petsY">Yes</label></div>
+          <div class="option-item"><input type="radio" name="pets" id="petsN" value="No"><label for="petsN">No</label></div>
+        </div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Copy of Photo ID <span class="required">*</span></label>
+      <div class="file-upload"><input type="file" name="photoId" accept=".pdf,.jpg,.jpeg,.png" required><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+    </div>
+    <div class="field-group">
+      <label>Copy of Social Security Card</label>
+      <div class="file-upload"><input type="file" name="ssnCard" accept=".pdf,.jpg,.jpeg,.png"><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+      <div class="helper-text">Will be required upon approval</div>
+    </div>
+    <div class="field-group">
+      <label>Full Voucher - All Pages <span class="required">*</span></label>
+      <div class="file-upload"><input type="file" name="voucher" accept=".pdf,.jpg,.jpeg,.png" required><div class="upload-icon">&#8682;</div><div class="upload-text">Click or drag to upload</div><div class="file-name"></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Disclosure #1</div>
+    <div class="disclosure-text">I agree that all of the information provided in this application is true, accurate, complete, and correct as of today's date. I agree that any information determined to be intentionally false or omitted will be grounds for disapproval of my application or termination of the lease. I understand and agree that this application does not guarantee that I will be offered the property, and I authorize the owner to verify the information provided. I agree to follow the rules for acceptable use including no smoking, no pets, and no subletting.</div>
+    <div class="field-group">
+      <div class="sig-label"><label>Signature <span class="required">*</span></label><span class="sig-hint">Draw your signature below</span></div>
+      <div class="signature-pad-wrapper"><canvas id="sig1"></canvas><button type="button" class="sig-clear" onclick="clearSig('sig1')">Clear</button></div>
+      <input type="hidden" name="signature1" id="sig1Data">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Disclosure #2</div>
+    <div class="disclosure-text">In connection with my tenant application with you, I understand that consumer reports which may contain public record information may be requested to evaluate my rental application. These reports may include the following types of information: names and dates of previous employers, public records, credit data, bankruptcy proceedings, eviction and criminal records, etc., from federal, state and other agencies which maintain such records. I hereby authorize procurement of consumer report(s). If approved as a tenant, this authorization shall remain on file and shall serve as ongoing authorization for you to procure consumer reports at any time during my contract period.</div>
+    <div class="field-group">
+      <div class="sig-label"><label>Signature <span class="required">*</span></label><span class="sig-hint">Draw your signature below</span></div>
+      <div class="signature-pad-wrapper"><canvas id="sig2"></canvas><button type="button" class="sig-clear" onclick="clearSig('sig2')">Clear</button></div>
+      <input type="hidden" name="signature2" id="sig2Data">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tenant Acknowledgement</div>
+    <div class="disclosure-text" style="font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:0.2px">This application does not guarantee you the apartment. By signing this document you acknowledge that you will be considered for the apartment but you are not guaranteed to get it.</div>
+    <div class="field-row field-group">
+      <div class="field-group">
+        <label for="sigFirst">First Name <span class="required">*</span></label>
+        <input type="text" id="sigFirst" name="sigFirstName" required pattern="[A-Za-z\s\-']+">
+      </div>
+      <div class="field-group">
+        <label for="sigLast">Last Name <span class="required">*</span></label>
+        <input type="text" id="sigLast" name="sigLastName" required pattern="[A-Za-z\s\-']+">
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="sig-label"><label>Signature <span class="required">*</span></label><span class="sig-hint">Draw your signature below</span></div>
+      <div class="signature-pad-wrapper"><canvas id="sig3"></canvas><button type="button" class="sig-clear" onclick="clearSig('sig3')">Clear</button></div>
+      <input type="hidden" name="signature3" id="sig3Data">
+    </div>
+  </div>
+
+  <div class="section" style="text-align:center;background:var(--slate-50);border-style:dashed">
+    <p style="font-size:14px;font-weight:700;margin-bottom:4px">Application Fee: $20</p>
+    <p class="helper-text">A processing fee of $20 is required for applications to be submitted.</p>
+  </div>
+
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+    <button type="submit" class="btn btn-submit">Submit Application</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="form-step" data-step="success">
+  <div class="section success-screen">
+    <div class="check">&#10003;</div>
+    <h2 style="margin-bottom:8px;color:var(--slate-900)">Application Submitted</h2>
+    <p style="color:var(--slate-500)">Thank you. You will be contacted regarding the status of your application.</p>
+  </div>
+</div>
+
+</form>
+</div>
+<div class="form-footer">Rental Application</div>
+
+<script>
+let currentStep = 0;
+const totalSteps = 5;
+
+function updateProgress() {
+  document.getElementById('progressFill').style.width = ((currentStep + 1) / totalSteps * 100) + '%';
+  document.querySelectorAll('.step-dot').forEach(d => {
+    const s = parseInt(d.dataset.step);
+    d.classList.toggle('active', s === currentStep);
+    d.classList.toggle('completed', s < currentStep);
+  });
+}
+
+function showStep(step) {
+  document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+  const t = document.querySelector('.form-step[data-step="' + step + '"]');
+  if (t) { t.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  updateProgress();
+  // Re-init signature canvases when step 4 becomes visible
+  if (step === 4) setTimeout(initAllSigs, 50);
+}
+
+function validateStep() {
+  const step = document.querySelector('.form-step[data-step="' + currentStep + '"]');
+  let valid = true;
+  step.querySelectorAll('.field-group').forEach(fg => fg.classList.remove('has-error'));
+
+  step.querySelectorAll('input[required], select[required]').forEach(input => {
+    const cond = input.closest('.conditional');
+    if (cond && !cond.classList.contains('show')) return;
+    if (!input.value || !input.checkValidity()) {
+      const fg = input.closest('.field-group');
+      if (fg) fg.classList.add('has-error');
+      valid = false;
+    }
+  });
+
+  const radioGroups = new Set();
+  step.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
+  radioGroups.forEach(name => {
+    const first = step.querySelector('input[name="' + name + '"]');
+    const cond = first.closest('.conditional');
+    if (cond && !cond.classList.contains('show')) return;
+    if (!step.querySelector('input[name="' + name + '"]:checked')) {
+      const fg = first.closest('.field-group');
+      if (fg) fg.classList.add('has-error');
+      valid = false;
+    }
+  });
+  return valid;
+}
+
+function nextStep() { if (validateStep() && currentStep < totalSteps - 1) { currentStep++; showStep(currentStep); } }
+function prevStep() { if (currentStep > 0) { currentStep--; showStep(currentStep); } }
+
+document.querySelectorAll('.step-dot').forEach(d => {
+  d.addEventListener('click', () => { const s = parseInt(d.dataset.step); if (s <= currentStep) { currentStep = s; showStep(currentStep); } });
+});
+
+function toggle(id, show) { const el = document.getElementById(id); if (el) el.classList.toggle('show', show); }
+
+// File uploads
+document.querySelectorAll('.file-upload input[type="file"]').forEach(input => {
+  input.addEventListener('change', function () {
+    this.parentElement.querySelector('.file-name').textContent = this.files.length ? this.files[0].name : '';
+  });
+});
+
+// Logo
+document.getElementById('logoUpload').addEventListener('change', function () {
+  if (this.files.length) {
+    const r = new FileReader();
+    r.onload = function (e) {
+      const area = document.querySelector('.logo-area');
+      const p = document.getElementById('logoPlaceholder');
+      if (p) p.style.display = 'none';
+      let img = area.querySelector('img');
+      if (!img) { img = document.createElement('img'); area.appendChild(img); }
+      img.src = e.target.result;
+    };
+    r.readAsDataURL(this.files[0]);
+  }
+});
+
+// Occupants
+function renderOccupants() {
+  const c = parseInt(document.getElementById('occupantCount').value) || 1;
+  let h = '';
+  for (let i = 0; i < c; i++)
+    h += '<div class="occupant-row"><div><label>Full Name</label><input type="text" name="occName' + i + '" placeholder="Occupant ' + (i + 1) + '"></div><div><label>Relationship</label><input type="text" name="occRelation' + i + '"></div></div>';
+  document.getElementById('occupantRows').innerHTML = h;
+}
+
+// Phone formatting
+document.querySelectorAll('input[type="tel"]').forEach(input => {
+  input.addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '');
+    if (v.length > 10) v = v.slice(0, 10);
+    if (v.length >= 6) this.value = '(' + v.slice(0, 3) + ') ' + v.slice(3, 6) + '-' + v.slice(6);
+    else if (v.length >= 3) this.value = '(' + v.slice(0, 3) + ') ' + v.slice(3);
+  });
+});
+
+// N/A exclusivity
+document.getElementById('incNA').addEventListener('change', function () {
+  if (this.checked) document.querySelectorAll('input[name="incomeSource"]:not(#incNA)').forEach(cb => cb.checked = false);
+});
+document.querySelectorAll('input[name="incomeSource"]:not(#incNA)').forEach(cb => {
+  cb.addEventListener('change', function () { if (this.checked) document.getElementById('incNA').checked = false; });
+});
+
+// ---- SIGNATURE PADS (fixed) ----
+const sigState = {};
+
+function initSig(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // Set actual pixel dimensions from CSS layout size
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * (window.devicePixelRatio || 1);
+  canvas.height = rect.height * (window.devicePixelRatio || 1);
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  let drawing = false;
+
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    sigState[canvasId] = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+  function end() { drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+
+function clearSig(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  sigState[canvasId] = false;
+}
+
+function initAllSigs() {
+  ['sig1', 'sig2', 'sig3'].forEach(id => initSig(id));
+}
+
+// Handle window resize for signature pads
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(initAllSigs, 200);
+});
+
+// Form submit
+document.getElementById('rentalApp').addEventListener('submit', function (e) {
+  if (!validateStep()) { e.preventDefault(); return; }
+  // Encode signatures as base64 into hidden fields
+  ['sig1', 'sig2', 'sig3'].forEach((id, i) => {
+    const canvas = document.getElementById(id);
+    document.getElementById(id + 'Data').value = canvas.toDataURL('image/png');
+  });
+});
+
+// Init
+updateProgress();
+initAllSigs();
+</script>
+</body>
+</html>

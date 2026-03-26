@@ -515,7 +515,7 @@
 </div>
 
 <div class="form-container">
-<form id="rentalApp" action="https://formspree.io/f/xojpqlvb" method="POST" enctype="multipart/form-data" novalidate>
+<form id="rentalApp" novalidate>
 
 <!-- PAGE 1: CONTACT -->
 <div class="form-step active" data-step="0">
@@ -1154,12 +1154,134 @@ function initAllSigs() {
   });
 }
 
-// Submit
-document.getElementById('rentalApp').addEventListener('submit', function (e) {
-  if (!validateStep()) { e.preventDefault(); return; }
+// CONFIGURATION - Replace with your deployed Apps Script URL
+var APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) { resolve(null); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var base64 = reader.result.split(',')[1];
+      resolve({ name: file.name, type: file.type, content: base64 });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function submitForm() {
+  var form = document.getElementById('rentalApp');
+
+  // Collect signature data
   ['sig1', 'sig2', 'sig3'].forEach(id => {
     document.getElementById(id + 'Data').value = sigPads[id] ? sigPads[id].toDataURL() : '';
   });
+
+  // Collect text/radio/select/checkbox fields
+  var payload = {};
+  var textFields = [
+    'firstName', 'lastName', 'cellPhone', 'email',
+    'applyingAddress', 'applyingUnit',
+    'currentStreet', 'currentApt', 'currentCity', 'currentState', 'currentZip', 'currentCountry',
+    'voucherBeds', 'cashNumber',
+    'employerName', 'employerAddress', 'supervisorName', 'supervisorPhone',
+    'hourlyRate', 'hoursPerWeek',
+    'hsName', 'hsPhone', 'hsEmail',
+    'llName', 'llPhone', 'llEmail',
+    'sigFirstName', 'sigLastName'
+  ];
+  textFields.forEach(name => {
+    var el = form.elements[name];
+    if (el) payload[name] = el.value;
+  });
+
+  var radioFields = [
+    'viewedApt', 'rentalAssist', 'shelter', 'cashActive', 'creditScore',
+    'hasOccupants', 'employed', 'veteran', 'filedTax', 'smoker', 'pets'
+  ];
+  radioFields.forEach(name => {
+    var checked = form.querySelector('input[name="' + name + '"]:checked');
+    payload[name] = checked ? checked.value : '';
+  });
+
+  // Checkboxes (program, incomeSource)
+  payload.program = [];
+  form.querySelectorAll('input[name="program"]:checked').forEach(cb => {
+    payload.program.push(cb.value);
+  });
+  payload.incomeSource = [];
+  form.querySelectorAll('input[name="incomeSource"]:checked').forEach(cb => {
+    payload.incomeSource.push(cb.value);
+  });
+
+  // Occupants
+  var occCount = form.elements['occupantCount'] ? parseInt(form.elements['occupantCount'].value) || 0 : 0;
+  payload.occupants = [];
+  payload.occupantCount = occCount;
+  for (var i = 0; i < occCount; i++) {
+    var nameEl = form.elements['occName' + i];
+    var relEl = form.elements['occRelation' + i];
+    if (nameEl && relEl) {
+      payload.occupants.push({ name: nameEl.value, relation: relEl.value });
+    }
+  }
+
+  // Signatures
+  payload.signature1 = form.elements['signature1'] ? form.elements['signature1'].value : '';
+  payload.signature2 = form.elements['signature2'] ? form.elements['signature2'].value : '';
+  payload.signature3 = form.elements['signature3'] ? form.elements['signature3'].value : '';
+
+  // Files
+  var fileFieldNames = [
+    'residencyLetter', 'paystub1', 'paystub2', 'paystub3',
+    'taxReturn', 'budgetLetter', 'photoId', 'ssnCard', 'voucher'
+  ];
+  payload.files = {};
+  for (var i = 0; i < fileFieldNames.length; i++) {
+    var fieldName = fileFieldNames[i];
+    var input = form.elements[fieldName];
+    if (input && input.files && input.files[0]) {
+      payload.files[fieldName] = await fileToBase64(input.files[0]);
+    }
+  }
+
+  // Send to Apps Script
+  var response = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  });
+
+  var result = await response.json();
+  if (result.success) {
+    return true;
+  } else {
+    throw new Error(result.error || 'Submission failed');
+  }
+}
+
+// Submit
+document.getElementById('rentalApp').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  if (!validateStep()) return;
+
+  var submitBtn = document.querySelector('.btn-submit');
+  var originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Submitting...';
+  submitBtn.disabled = true;
+
+  try {
+    await submitForm();
+    // Show success screen
+    document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+    document.querySelector('[data-step="success"]').classList.add('active');
+    document.getElementById('progressWrap').style.display = 'none';
+  } catch (err) {
+    alert('Submission failed: ' + err.message + '. Please try again.');
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }
 });
 
 updateProgress();

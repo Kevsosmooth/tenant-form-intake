@@ -110,11 +110,15 @@
     border-radius: 2px;
     background: rgba(255,255,255,0.08);
     transition: background 0.4s ease, box-shadow 0.4s ease;
+    cursor: pointer;
+    padding: 8px 0;
+    background-clip: content-box;
   }
-  .progress-seg.completed { background: var(--gold); }
+  .progress-seg.completed { background: var(--gold); background-clip: content-box; }
   .progress-seg.active {
     background: linear-gradient(90deg, var(--gold) 60%, rgba(255,255,255,0.08) 100%);
     box-shadow: 0 0 8px rgba(201, 168, 76, 0.3);
+    background-clip: content-box;
   }
   .progress-info {
     display: flex;
@@ -505,11 +509,11 @@
 
 <div class="progress-wrap" id="progressWrap">
   <div class="progress-segments" id="progressSegments">
-    <div class="progress-seg active"></div>
-    <div class="progress-seg"></div>
-    <div class="progress-seg"></div>
-    <div class="progress-seg"></div>
-    <div class="progress-seg"></div>
+    <div class="progress-seg active" data-step="0" title="Contact"></div>
+    <div class="progress-seg" data-step="1" title="Screening"></div>
+    <div class="progress-seg" data-step="2" title="Occupants & Work"></div>
+    <div class="progress-seg" data-step="3" title="Documents"></div>
+    <div class="progress-seg" data-step="4" title="Authorization"></div>
   </div>
   <div class="progress-info">
     <span class="step-count" id="stepCount">Step 1 of 5</span>
@@ -982,6 +986,29 @@ function validateStep() {
 
 function nextStep() { if (validateStep() && currentStep < totalSteps - 1) { currentStep++; showStep(currentStep, 'forward'); } }
 function prevStep() { if (currentStep > 0) { currentStep--; showStep(currentStep, 'back'); } }
+
+// Clickable progress segments - go back to any completed step
+let highestStep = 0;
+const origNextStep = nextStep;
+nextStep = function() {
+  if (validateStep() && currentStep < totalSteps - 1) {
+    currentStep++;
+    if (currentStep > highestStep) highestStep = currentStep;
+    showStep(currentStep, 'forward');
+  }
+};
+
+document.querySelectorAll('.progress-seg').forEach(seg => {
+  seg.addEventListener('click', () => {
+    const target = parseInt(seg.dataset.step);
+    if (target <= highestStep && target !== currentStep) {
+      const dir = target < currentStep ? 'back' : 'forward';
+      currentStep = target;
+      showStep(currentStep, dir);
+    }
+  });
+});
+
 function toggle(id, show) { const el = document.getElementById(id); if (el) el.classList.toggle('show', show); }
 
 // File uploads
